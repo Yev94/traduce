@@ -14,7 +14,7 @@ $release = Join-Path $PSScriptRoot 'release'
 New-Item -ItemType Directory -Path $release -Force | Out-Null
 & $innoCompiler /Qp (Join-Path $PSScriptRoot 'installer.iss')
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo crear el instalador.' }
-$files = @('dist\Traduce.exe', 'dist\Traduce.exe.config', 'README.md', 'LICENSE') | ForEach-Object { Join-Path $PSScriptRoot $_ }
+$files = @('dist\Traduce.exe', 'dist\Traduce.exe.config', 'README.md', 'README.es.md', 'LICENSE', 'assets', 'docs') | ForEach-Object { Join-Path $PSScriptRoot $_ }
 Compress-Archive -LiteralPath $files -DestinationPath (Join-Path $release 'Traduce-Windows-x64.zip') -Force
 $hashes = @('Traduce-Setup.exe', 'Traduce-Windows-x64.zip') | ForEach-Object {
     $hash = Get-FileHash -LiteralPath (Join-Path $release $_) -Algorithm SHA256

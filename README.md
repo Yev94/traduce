@@ -1,93 +1,116 @@
+<p align="center"><img src="assets/logo.png" width="128" alt="Traduce logo" /></p>
+
 # Traduce
 
-**Selecciona una región con Alt+T y tradúcela con tu IA.** Aplicación pequeña para Windows, con OCR local y soporte de texto e imágenes.
+**[English](README.md) · [Español](README.es.md)**
 
-[Descargar instalador](https://github.com/Yev94/traduce/releases/latest/download/Traduce-Setup.exe) · [Versión ZIP](https://github.com/Yev94/traduce/releases/latest/download/Traduce-Windows-x64.zip) · [Todas las versiones](https://github.com/Yev94/traduce/releases)
+**Select a screen region with Alt+T and translate it with your AI.** A small Windows app with local OCR and support for text and images.
 
-Traduce al **español** desde otros idiomas. Si el original está en español, traduce al **inglés**. Funciona sobre navegadores, documentos, imágenes y cualquier programa que Windows pueda capturar.
+[Download installer](https://github.com/Yev94/traduce/releases/latest/download/Traduce-Setup.exe) · [Portable ZIP](https://github.com/Yev94/traduce/releases/latest/download/Traduce-Windows-x64.zip) · [All releases](https://github.com/Yev94/traduce/releases)
 
-## Empezar
+Translate other languages into **Spanish**, and Spanish into **English**. Works with browsers, documents, images and any app Windows can capture.
 
-1. Descarga y abre **Traduce-Setup.exe**. Instala para tu usuario, sin administrador. Puedes dejar activado el inicio con Windows.
-2. En la primera apertura elige tu conexión:
-   - **ChatGPT · Codex** o **Claude Code**: pulsa **Instalar cliente** si lo necesitas, después **Iniciar sesión oficial**. Completa el acceso en el navegador del proveedor. Si ya tienes una sesión, pulsa **Comprobar** y **Guardar**.
-   - **API**: pega tu clave, pulsa **Cargar modelos** si quieres comprobarla o elegir otro modelo y **Guardar**. Cada proveedor conserva su propia configuración.
-   - **Ollama**: inicia Ollama, descarga un modelo y selecciónalo con **Cargar modelos**.
-3. Pulsa **Alt+T**, arrastra sobre el contenido y suelta. Windows reconoce texto localmente; si no obtiene texto, Traduce envía el recorte como imagen.
+![Actual Traduce window in English](docs/window-en.png)
 
-**Requisitos:** Windows 10/11 x64 y .NET Framework 4.8. No hace falta instalar un SDK, Python ni Node para usar Traduce. Las conexiones de cuenta necesitan su cliente oficial. WinGet (App Installer) permite instalarlo desde la aplicación; también se ofrece un enlace a la instalación oficial.
+## Interface language
 
-La versión ZIP no requiere instalación: extrae ambos archivos `Traduce.exe` y `Traduce.exe.config` juntos y abre el EXE. No añade inicio automático. Los ajustes siguen guardándose por usuario en AppData. Al cambiar de ordenador, vuelve a iniciar sesión o introduce la clave allí; no copies credenciales entre equipos.
+Open **Settings → Interface language**, choose **Español** or **English**, and click **Save**. Buttons, menus, messages and errors switch without restarting. Your choice is remembered. New installations follow the Windows language (English unless it is Spanish); existing installations keep Spanish.
 
-Los ejecutables de esta primera versión no tienen firma de editor; Windows puede mostrar un aviso al descargarlos. Las sumas SHA-256 de cada versión están en `SHA256SUMS.txt`.
+The interface language does not change the translation direction: Spanish → English; other languages → Spanish.
 
-## Proveedores
+<details>
+<summary>Show connection settings and the language selector</summary>
 
-| Conexión | Acceso | Modelo inicial |
+![Connection settings and language selection](docs/settings-en.png)
+
+</details>
+
+## Get started
+
+1. Download and run **Traduce-Setup.exe**. It installs for your Windows user without administrator access. You can leave startup with Windows enabled.
+2. Choose a connection on first launch:
+   - **ChatGPT · Codex** or **Claude Code**: click **Install client** if needed, then **Sign in**. Complete the provider's official browser sign-in. Already signed in? Click **Check** and **Save**.
+   - **API**: enter your key, optionally **Load models** to check the connection or choose another model, then **Save**. Each provider keeps its own settings.
+   - **Ollama**: start Ollama, download a model and select it with **Load models**.
+3. Press **Alt+T**, drag over the content and release. Windows recognizes text locally; when it finds no text, Traduce sends the crop as an image.
+
+**Requirements:** Windows 10/11 x64 and .NET Framework 4.8. No SDK, Python or Node is needed to run Traduce. Account connections require the official client. WinGet (App Installer) allows installation from the app; an official installation link is also provided.
+
+The ZIP requires no installation: extract `Traduce.exe` and `Traduce.exe.config` together, then run the EXE. It does not add automatic startup. Settings are still saved per user in AppData. On another computer, sign in again or enter your API key there; do not copy credentials between computers.
+
+These executables are not publisher-signed yet; Windows may display a warning after download. Each release includes `SHA256SUMS.txt`.
+
+## Providers
+
+| Connection | Access | Initial model |
 | --- | --- | --- |
-| ChatGPT · Codex | Tu sesión en el cliente oficial de Codex | `gpt-6-luna`, razonamiento bajo |
-| Claude Code | Tu sesión en el cliente oficial de Claude Code | `haiku` |
-| OpenAI API | Clave de OpenAI Platform | `gpt-6-luna`, sin razonamiento adicional |
-| Claude API | Clave de Claude Console | `claude-haiku-4-5` |
-| Google Gemini API | Clave de AI Studio | `gemini-3.8-flash` |
-| OpenRouter API | Clave de OpenRouter | Elígelo entre los modelos de tu cuenta |
-| Ollama local | Servidor local en `localhost:11434` | Un modelo que tengas descargado |
-| Otra API compatible con OpenAI | URL base, clave y modelo | Configurable |
+| ChatGPT · Codex | Your session in the official Codex client | `gpt-6-luna`, low reasoning |
+| Claude Code | Your session in the official Claude Code client | `haiku` |
+| OpenAI API | OpenAI Platform key | `gpt-6-luna`, no additional reasoning |
+| Claude API | Claude Console key | `claude-haiku-4-5` |
+| Google Gemini API | AI Studio key | `gemini-3.8-flash` |
+| OpenRouter API | OpenRouter key | Choose a model from your account |
+| Local Ollama | Local server at `localhost:11434` | A model you have downloaded |
+| Other OpenAI-compatible API | Base URL, key and model | Configurable |
 
-Puedes escribir otro identificador de modelo. La disponibilidad depende de tu cuenta. Para traducir imágenes, el modelo debe admitir visión; con un modelo de texto puedes traducir lo reconocido por OCR.
+You can enter another model identifier. Availability depends on your account. Image translation requires a vision model; text models can translate text extracted by OCR.
 
-Las suscripciones se utilizan **a través del cliente oficial instalado y autenticado por cada usuario**, con sus límites y condiciones. Traduce no implementa un acceso propio a las suscripciones ni extrae sus tokens. No todas las suscripciones de IA permiten este uso. Las APIs tienen cuotas y facturación independientes de las suscripciones web.
+Subscriptions are used **through the official client installed and authenticated by each user**, subject to its limits and terms. Traduce does not implement its own subscription login or extract client tokens. Not all AI subscriptions support this usage. APIs have quotas and billing separate from web subscriptions.
 
-La opción genérica utiliza `POST /chat/completions` y `GET /models`. Admite proveedores compatibles, no cualquier API propietaria sin adaptación. La URL debe ser HTTPS; HTTP se permite únicamente en el equipo local. Cambiar esa URL descarta la clave anterior para evitar enviarla al servidor nuevo. Si el servidor no ofrece `/models`, escribe el modelo manualmente.
+The generic option uses `POST /chat/completions` and `GET /models`. It supports compatible providers; proprietary APIs require an adapter. Base URLs must use HTTPS; HTTP is allowed only on the local computer. Changing the URL discards the previous key so it cannot be sent to the new server. If the server does not expose `/models`, enter the model manually.
 
-## Uso diario
+## Everyday use
 
-- **Esc** o clic derecho cancela la selección. Otro Alt+T sustituye la petición pendiente; una respuesta antigua no puede sobrescribir el resultado nuevo.
-- **Copiar** copia la traducción. **Pegar** acepta texto o imagen del portapapeles. **Imagen** abre una imagen directamente, sin OCR previo. **Texto** permite revisar o editar el original.
-- La ventana tiene el ancho del recorte, limitado al área útil del monitor. Se coloca encima o debajo según el espacio, permanece por delante y conserva el foco en la aplicación de origen. Admite varias pantallas y distintas escalas.
-- Cerrar la ventana la deja en la bandeja, con el atajo activo. Para salir, usa **Salir** en el icono junto al reloj.
-- **Ajustes** permite cambiar proveedor, modelo, clave y atajo. La caché guarda hasta 12 resultados en memoria; se descarta al salir.
+- **Esc** or right-click cancels selection. Another Alt+T replaces the pending request; an older response cannot overwrite the new result.
+- **Copy** copies the translation. **Paste** accepts clipboard text or images. **Image** opens an image directly, bypassing OCR. **Text** lets you review or edit the original.
+- The window matches the crop width, limited by the monitor's work area. It appears above or below the selection, stays on top and leaves focus in the source app. Multiple monitors and display scales are supported.
+- Closing the window keeps it in the tray with the shortcut active. Choose **Quit** from the tray menu to exit.
+- **Settings** lets you change the provider, model, key, shortcut and interface language. Up to 12 results are cached in memory and discarded on exit.
 
-No cambia el portapapeles al capturar ni reemplaza el contenido de la aplicación original. El OCR depende de los idiomas instalados en Windows: puede omitir texto o perder formato. Para evitar un reconocimiento parcial, pega una captura o usa Imagen. El contenido que Windows capture en negro no será legible.
+Capturing does not modify the clipboard or replace the source application's content. OCR depends on the languages installed in Windows and may omit text or lose formatting. To bypass incomplete recognition, paste a screenshot or use Image. Content Windows captures as black cannot be read.
 
-## Privacidad y registros
+## Privacy and logs
 
-La captura completa se mantiene en memoria mientras seleccionas. Solo se procesa el recorte. Se envía **el texto reconocido o la imagen recortada** al proveedor seleccionado cuando pides traducir. Con Ollama local, la petición va al servidor local configurado.
+The full screen capture stays in memory while you select. Only the crop is processed. **Recognized text or the cropped image** is sent to the selected provider when you request translation. With local Ollama, requests go to the local server.
 
-Las claves API se cifran mediante **Windows DPAPI para el usuario actual**. Traduce no muestra ni copia los tokens de los clientes oficiales. No guarda un historial de textos o traducciones. Las imágenes temporales usadas por Codex se eliminan al terminar o cancelar; un cierre forzado puede dejar archivos `Traduce-*` en TEMP. La retención y los registros de los proveedores/clientes se rigen por sus políticas.
+API keys are encrypted with **Windows DPAPI for the current user**. Traduce does not display or copy official client tokens. It keeps no text or translation history. Temporary images used by Codex are deleted on completion or cancellation; a forced shutdown may leave `Traduce-*` files in TEMP. Provider/client logs and retention follow their own policies.
 
-Los registros locales están en `%LOCALAPPDATA%\Traduce\logs\captures-AAAA-MM-DD.jsonl`. Registran aplicación activa y bajo el recorte (ejecutable, PID, clase de ventana), modo `text`/`image`, motivo del OCR, número de caracteres, proveedor/modelo, tiempos, geometría/monitor y resultado. **No contienen títulos de ventanas, texto, imágenes, claves ni traducciones.** No se suben a ningún servicio.
+Local logs are at `%LOCALAPPDATA%\Traduce\logs\captures-YYYY-MM-DD.jsonl`. They record the active app and app under the crop (executable, PID, window class), `text`/`image` mode, OCR reason, character count, provider/model, timings, geometry/monitor and outcome. **They contain no window titles, text, images, keys or translations.** They are not uploaded.
 
-Para analizar la detección, cuenta solo eventos `capture` y agrupa por `active_app.process`, `mode` y `ocr_reason`; los eventos `finished` sirven para resultado y duración. La proporción de texto detectado no mide su exactitud. Pegar, Imagen y la traducción manual quedan fuera del registro de recortes.
+To analyze detection, count only `capture` events and group by `active_app.process`, `mode` and `ocr_reason`; `finished` events provide outcome and duration. The text detection rate does not measure OCR accuracy. Paste, Image and manual text translation are excluded from crop logs.
 
-## Actualizar y desinstalar
+## Update and uninstall
 
-Ejecuta el nuevo instalador para actualizar. Conserva ajustes y registros y cierra la instancia anterior. Para desinstalar, usa **Configuración de Windows → Aplicaciones → Traduce**. La desinstalación conserva los datos de usuario; puedes borrarlos eliminando `%LOCALAPPDATA%\Traduce` después de salir. No desinstala los clientes oficiales de IA.
+Run the new installer to update. It preserves settings and logs and closes the previous instance. Uninstall through **Windows Settings → Apps → Traduce**. User data is retained; after exiting, you can delete `%LOCALAPPDATA%\Traduce` to remove it. Official AI clients are not uninstalled.
 
-El inicio automático usa el acceso directo `Traduce.lnk` de `shell:startup` con `--background`. Puedes desactivarlo en Aplicaciones de inicio de Windows o quitando ese acceso directo. `Traduce.exe --quit` permite cerrar la aplicación al actualizarla.
+Automatic startup uses the `Traduce.lnk` shortcut in `shell:startup` with `--background`. Disable it in Windows Startup apps or remove that shortcut. `Traduce.exe --quit` closes the app for updates.
 
-## Compilar
+## Build
 
-Código C# 5 / WinForms, .NET Framework 4.8 y Windows 10/11 SDK (`Windows.winmd`). Sin dependencias NuGet. En PowerShell, desde la carpeta del repositorio:
+C# 5 / WinForms, .NET Framework 4.8 and the Windows 10/11 SDK (`Windows.winmd`). No NuGet dependencies. From PowerShell in the repository:
 
 ```powershell
-.\build.ps1 -ContractTest   # Compila y prueba contratos API/CLI sin credenciales
-.\build.ps1 -Test           # Añade interfaz, OCR, portapapeles y arranque real
-.\package.ps1 -SkipBuild    # Instalador + ZIP + hashes; requiere Inno Setup 6
+.\build.ps1 -ContractTest   # Build and test API/CLI contracts without credentials
+.\build.ps1 -Test           # Include UI, OCR, clipboard and actual startup tests
+.\package.ps1 -SkipBuild    # Installer + ZIP + hashes; requires Inno Setup 6
 ```
 
-Inno Setup se puede instalar con `winget install --id JRSoftware.InnoSetup --exact --scope user`. Para compilar, empaquetar e instalar localmente: `./install.ps1 -Launch`.
+Install Inno Setup with `winget install --id JRSoftware.InnoSetup --exact --scope user`. To build, package and install locally: `./install.ps1 -Launch`.
 
-Las pruebas completas requieren Windows con escritorio. Para comprobar el atajo y la colocación sobre los monitores conectados, cierra Traduce y ejecuta `./build.ps1 -DesktopTest` con el escritorio desbloqueado; no cambies de ventana durante la prueba. `./build.ps1 -LiveTest` envía **tres peticiones reales a Codex** usando tu sesión: texto, texto de OCR e imagen. Las pruebas ordinarias no consumen servicios.
+Full tests require a Windows desktop. To check the global shortcut and placement on connected monitors, close Traduce and run `./build.ps1 -DesktopTest` on an unlocked desktop; do not switch windows during the test. `./build.ps1 -LiveTest` sends **three real Codex requests** using your session: text, OCR text and an image. Ordinary tests do not contact paid services.
 
-GitHub Actions compila, ejecuta las pruebas de contratos y genera los paquetes. No ejecuta pruebas de escritorio/OCR ni servicios de pago en el runner. Los binarios para usuarios se publican en Releases; los artefactos de CI permiten revisar cada compilación.
+GitHub Actions builds, runs contract tests and packages the app. It does not run desktop/OCR tests or paid services on the runner. User downloads are published in Releases; CI artifacts are available for each build.
 
-## Documentación oficial
+## Contribute and visual assets
 
-[Codex: autenticación](https://developers.openai.com/codex/auth) · [Codex no interactivo](https://developers.openai.com/codex/noninteractive) · [GPT-6 Luna API](https://developers.openai.com/api/docs/models/gpt-6-luna) · [Claude Code: CLI](https://code.claude.com/docs/en/cli-reference) · [Claude Code: condiciones de integración](https://code.claude.com/docs/en/legal-and-compliance) · [Claude Messages](https://platform.claude.com/docs/en/api/messages/create) · [Gemini compatible con OpenAI](https://ai.google.dev/gemini-api/docs/openai) · [OpenRouter](https://openrouter.ai/docs/quickstart) · [Ollama](https://docs.ollama.com/api/openai-compatibility)
+Open source under the [MIT license](LICENSE). Report problems or suggest changes on [GitHub](https://github.com/Yev94/traduce/issues). Keep both READMEs in sync and add UI translations to `assets/en.json`; changing the interface language must never translate captured content.
 
-Proyecto independiente, sin afiliación con estos proveedores. Licencia MIT.
+The [PNG logo](assets/logo.png) has real transparency. The [Windows icon](assets/traduce.ico) includes sizes from 16 to 256 px. [Logo origin and prompt](docs/branding.md).
 
-## English
+Regenerate the icon with `./scripts/make-icon.ps1`. To capture the actual app windows for documentation, compile with `-Test`, close the installed app and run `./dist/Traduce.Tests.exe --screenshots`. It uses only the included sample content and does not contact AI services.
 
-Small Windows screen translator. Press **Alt+T**, select a region, and translate using your own AI account or API. Local Windows OCR sends text when available, otherwise only the selected image. Spanish is translated to English; other languages to Spanish. Download the installer or ZIP above. Supports official Codex/Claude Code clients, OpenAI, Anthropic, Gemini, OpenRouter, Ollama and OpenAI-compatible APIs. UI and primary documentation are currently in Spanish. Windows 10/11 x64; MIT licensed.
+## Official documentation
+
+[Codex authentication](https://developers.openai.com/codex/auth) · [Non-interactive Codex](https://developers.openai.com/codex/noninteractive) · [GPT-6 Luna API](https://developers.openai.com/api/docs/models/gpt-6-luna) · [Claude Code CLI](https://code.claude.com/docs/en/cli-reference) · [Claude Code integration terms](https://code.claude.com/docs/en/legal-and-compliance) · [Claude Messages](https://platform.claude.com/docs/en/api/messages/create) · [OpenAI-compatible Gemini](https://ai.google.dev/gemini-api/docs/openai) · [OpenRouter](https://openrouter.ai/docs/quickstart) · [Ollama](https://docs.ollama.com/api/openai-compatibility)
+
+Independent project, not affiliated with these providers. MIT licensed.

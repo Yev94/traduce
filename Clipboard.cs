@@ -62,13 +62,13 @@ namespace Traduce
                     IntPtr memory = Native.GetClipboardData(13); // CF_UNICODETEXT
                     if (memory == IntPtr.Zero) return "";
                     IntPtr text = Native.GlobalLock(memory);
-                    if (text == IntPtr.Zero) throw new ExternalException("No se ha podido leer el portapapeles.");
+                    if (text == IntPtr.Zero) throw new ExternalException(L.T("No se ha podido leer el portapapeles."));
                     try { return Marshal.PtrToStringUni(text) ?? ""; }
                     finally { Native.GlobalUnlock(memory); }
                 }
                 finally { Native.CloseClipboard(); }
             }
-            throw new ExternalException("El portapapeles está ocupado. Inténtalo de nuevo.");
+            throw new ExternalException(L.T("El portapapeles está ocupado. Inténtalo de nuevo."));
         }
         internal static DataObject Snapshot()
         {

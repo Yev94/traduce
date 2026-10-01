@@ -17,7 +17,7 @@ namespace Traduce
         public void SetKey(string key)
         {
             key = (key ?? "").Trim();
-            if (key.IndexOfAny(new[] { '\r', '\n' }) >= 0) throw new ArgumentException("La clave debe ocupar una sola línea.");
+            if (key.IndexOfAny(new[] { '\r', '\n' }) >= 0) throw new ArgumentException(L.T("La clave debe ocupar una sola línea."));
             ProtectedKey = key.Length == 0 ? null : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(key), Entropy, DataProtectionScope.CurrentUser));
         }
         public string ReadKey()
@@ -27,7 +27,7 @@ namespace Traduce
             catch (Exception e)
             {
                 if (!(e is CryptographicException) && !(e is FormatException)) throw;
-                throw new InvalidOperationException("Esta clave pertenece a otro usuario de Windows o está dañada. Pégala de nuevo en Conexión.");
+                throw new InvalidOperationException(L.T("Esta clave pertenece a otro usuario de Windows o está dañada. Pégala de nuevo en Conexión."));
             }
         }
     }
@@ -39,10 +39,11 @@ namespace Traduce
         public string CodexPath { get; set; }
         public string Model { get; set; }
         public int Shortcut { get; set; }
+        public string Language { get; set; }
         public string Provider { get; set; }
         public bool ConfigurationComplete { get; set; }
         public Dictionary<string, ProviderProfile> Profiles { get; set; }
-        public Settings() { Provider = "codex"; Profiles = new Dictionary<string, ProviderProfile>(); }
+        public Settings() { Provider = "codex"; Language = L.DefaultLanguage; Profiles = new Dictionary<string, ProviderProfile>(); }
         public static readonly string Folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Traduce");
         public ProviderProfile Profile(string id)
         {
@@ -61,7 +62,12 @@ namespace Traduce
         {
             var serializer = new JavaScriptSerializer();
             var settings = serializer.Deserialize<Settings>(json) ?? new Settings();
-            if (!serializer.Deserialize<Dictionary<string, object>>(json).ContainsKey("Provider")) settings.ConfigurationComplete = true;
+            var fields = serializer.Deserialize<Dictionary<string, object>>(json);
+            if (fields == null) return new Settings();
+            if (!fields.ContainsKey("Provider")) settings.ConfigurationComplete = true;
+            // Existing installations used Spanish before language selection was added.
+            if (!fields.ContainsKey("Language")) settings.Language = "es";
+            settings.Language = L.Normalize(settings.Language);
             if (string.IsNullOrWhiteSpace(settings.Provider)) settings.Provider = "codex";
             settings.Profile("codex");
             return settings;

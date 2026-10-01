@@ -69,7 +69,7 @@ namespace Traduce
                     while (!process.HasExited)
                     {
                         cancellation.ThrowIfCancellationRequested();
-                        if (watch.ElapsedMilliseconds > timeoutMs) throw new TimeoutException("El cliente ha tardado demasiado. Puedes volver a intentarlo.");
+                        if (watch.ElapsedMilliseconds > timeoutMs) throw new TimeoutException(L.T("El cliente ha tardado demasiado. Puedes volver a intentarlo."));
                         await Task.Delay(80, cancellation);
                     }
                     try { await writing; }
@@ -92,20 +92,20 @@ namespace Traduce
         public string Digest { get; private set; }
         public static ImageInput FromImage(Image image)
         {
-            if (image == null) throw new ArgumentException("No hay ninguna imagen para traducir.");
-            if ((long)image.Width * image.Height > 16000000) throw new ArgumentException("La imagen es demasiado grande. Recorta la zona con el texto (máximo 16 megapíxeles).");
+            if (image == null) throw new ArgumentException(L.T("No hay ninguna imagen para traducir."));
+            if ((long)image.Width * image.Height > 16000000) throw new ArgumentException(L.T("La imagen es demasiado grande. Recorta la zona con el texto (máximo 16 megapíxeles)."));
             using (var bytes = new MemoryStream())
             using (var normalized = new Bitmap(image))
             {
                 normalized.Save(bytes, ImageFormat.Png);
-                if (bytes.Length > 20 * 1024 * 1024) throw new ArgumentException("La imagen supera los 20 MB. Recorta la zona con el texto.");
+                if (bytes.Length > 20 * 1024 * 1024) throw new ArgumentException(L.T("La imagen supera los 20 MB. Recorta la zona con el texto."));
                 byte[] png = bytes.ToArray();
                 using (var hash = SHA256.Create()) return new ImageInput { Png = png, Digest = Convert.ToBase64String(hash.ComputeHash(png)) };
             }
         }
         public static ImageInput FromFile(string path)
         {
-            if (new FileInfo(path).Length > 20 * 1024 * 1024) throw new ArgumentException("La imagen supera los 20 MB.");
+            if (new FileInfo(path).Length > 20 * 1024 * 1024) throw new ArgumentException(L.T("La imagen supera los 20 MB."));
             using (var image = Image.FromFile(path)) return FromImage(image);
         }
     }
@@ -126,8 +126,8 @@ namespace Traduce
 
         public static void Validate(string text)
         {
-            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("Selecciona un texto o pégalo en el cuadro de arriba.");
-            if (text.Length > MaxCharacters) throw new ArgumentException("El texto supera los 60.000 caracteres. Selecciona un fragmento más pequeño.");
+            if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException(L.T("Selecciona un texto o pégalo en el cuadro de arriba."));
+            if (text.Length > MaxCharacters) throw new ArgumentException(L.T("El texto supera los 60.000 caracteres. Selecciona un fragmento más pequeño."));
         }
 
         public static IEnumerable<string> FindCandidates(string preferred)
@@ -135,7 +135,7 @@ namespace Traduce
             if (!string.IsNullOrWhiteSpace(preferred))
             {
                 if (!File.Exists(preferred) || !string.Equals(Path.GetExtension(preferred), ".exe", StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException("La ruta de Codex debe apuntar a un archivo codex.exe existente.");
+                    throw new ArgumentException(L.T("La ruta de Codex debe apuntar a un archivo codex.exe existente."));
                 return new[] { preferred };
             }
             var found = new List<string>();
@@ -180,7 +180,7 @@ namespace Traduce
                 catch (TimeoutException) { }
                 catch (System.ComponentModel.Win32Exception) { }
             }
-            throw new InvalidOperationException("No se ha encontrado una versión reciente de Codex CLI. Abre o actualiza Codex, o selecciona su codex.exe en Ajustes.");
+            throw new InvalidOperationException(L.T("No se ha encontrado una versión reciente de Codex CLI. Abre o actualiza Codex, o selecciona su codex.exe en Ajustes."));
         }
 
         public static List<string> Arguments(string folder, string model)
@@ -206,7 +206,7 @@ namespace Traduce
 
         public Task<string> TranslateImage(ImageInput image, Settings settings, CancellationToken token)
         {
-            if (image == null) throw new ArgumentException("No hay ninguna imagen para traducir.");
+            if (image == null) throw new ArgumentException(L.T("No hay ninguna imagen para traducir."));
             return TranslateInput("Traduce el texto visible de la imagen siguiendo las reglas de idioma indicadas.", image, settings, token);
         }
 
@@ -247,7 +247,7 @@ namespace Traduce
                 if (result.ExitCode != 0) throw new InvalidOperationException(ExplainFailure(result.Error + "\n" + result.Output));
                 string file = Path.Combine(folder, "translation.txt");
                 string translated = File.Exists(file) ? File.ReadAllText(file, Encoding.UTF8).Trim() : "";
-                if (translated.Length == 0) throw new InvalidOperationException("Codex no ha devuelto ninguna traducción. Prueba de nuevo.");
+                if (translated.Length == 0) throw new InvalidOperationException(L.T("Codex no ha devuelto ninguna traducción. Prueba de nuevo."));
                 translated = translated.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", Environment.NewLine);
                 token.ThrowIfCancellationRequested();
                 return translated;
@@ -263,14 +263,14 @@ namespace Traduce
         {
             string d = diagnostic.ToLowerInvariant();
             if (d.Contains("401") || d.Contains("not logged") || d.Contains("authentication") || d.Contains("refresh_token"))
-                return "La sesión de Codex necesita iniciarse de nuevo. Abre Codex, inicia sesión y vuelve a intentarlo.";
+                return L.T("La sesión de Codex necesita iniciarse de nuevo. Abre Codex, inicia sesión y vuelve a intentarlo.");
             if (d.Contains("429") || d.Contains("usage limit") || d.Contains("rate limit") || d.Contains("quota"))
-                return "Has alcanzado un límite de uso de Codex. Espera a que se restablezca y vuelve a intentarlo.";
+                return L.T("Has alcanzado un límite de uso de Codex. Espera a que se restablezca y vuelve a intentarlo.");
             if (d.Contains("model") && (d.Contains("not found") || d.Contains("not supported") || d.Contains("does not exist")))
-                return "Ese modelo no está disponible en tu cuenta. Borra el modelo de Ajustes para usar " + Settings.DefaultModel + ".";
+                return L.T("Ese modelo no está disponible en tu cuenta. Borra el modelo de Ajustes para usar ") + Settings.DefaultModel + ".";
             if (d.Contains("connect") || d.Contains("network") || d.Contains("dns"))
-                return "No se ha podido conectar con Codex. Comprueba la conexión a Internet y vuelve a intentarlo.";
-            return "Codex no ha podido completar la traducción. Comprueba tu sesión y la versión de Codex; puedes elegir otro ejecutable en Ajustes.";
+                return L.T("No se ha podido conectar con Codex. Comprueba la conexión a Internet y vuelve a intentarlo.");
+            return L.T("Codex no ha podido completar la traducción. Comprueba tu sesión y la versión de Codex; puedes elegir otro ejecutable en Ajustes.");
         }
     }
 }

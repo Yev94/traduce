@@ -25,6 +25,8 @@ namespace Traduce
         private static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+            Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("es-ES");
+            L.Language = "es";
             if (args.Contains("--contracts"))
             {
                 try
@@ -63,7 +65,12 @@ namespace Traduce
             using (var pump = new Form { ShowInTaskbar = false, Opacity = 0, Size = new Size(1, 1) })
             {
                 pump.Shown += async delegate {
-                    try { await Run(args.Contains("--live"), args.Contains("--desktop")); Console.WriteLine("PASS: " + passed + " checks"); }
+                    try
+                    {
+                        if (args.Contains("--screenshots")) await DocumentationScreenshots();
+                        else await Run(args.Contains("--live"), args.Contains("--desktop"));
+                        Console.WriteLine("PASS: " + passed + " checks");
+                    }
                     catch (Exception e) { Console.Error.WriteLine(e); exit = 1; }
                     finally { if (Directory.Exists(LogRoot)) Directory.Delete(LogRoot, true); pump.Close(); }
                 };
@@ -326,6 +333,29 @@ namespace Traduce
                 form.Quit();
             }
             Check(true, "Native window renders and closes cleanly");
+            var languageSettings = new Settings { CodexPath = Self, Language = "es" };
+            using (var connection = new SettingsForm(languageSettings))
+            {
+                connection.Show();
+                ((ComboBox)connection.Controls.Find("InterfaceLanguage", true)[0]).SelectedIndex = 1;
+                ((Button)connection.Controls.Find("SaveConnection", true)[0]).PerformClick();
+                for (int i = 0; i < 100 && connection.DialogResult != DialogResult.OK; i++) await Task.Delay(30);
+                Check(connection.DialogResult == DialogResult.OK && connection.Configuration.Language == "en" && languageSettings.Language == "es", "Language selector saves English without mutating the original settings draft");
+                languageSettings = Settings.Decode(new JavaScriptSerializer().Serialize(connection.Configuration));
+                Check(languageSettings.Language == "en" && languageSettings.CodexPath == Self, "Interface language persists alongside the existing account configuration");
+                connection.Close();
+            }
+            using (var translatedWindow = new MainForm(languageSettings))
+            {
+                translatedWindow.Show(); translatedWindow.Preview("sample", "Texto que no debe cambiar");
+                Check(translatedWindow.Controls.Find("Paste", true)[0].Text == "Paste" && L.T("Ajustes") == "Settings", "English interface renders translated controls");
+                var settingsButton = translatedWindow.Controls.Find("Settings", true)[0];
+                Check(settingsButton.Width >= settingsButton.GetPreferredSize(Size.Empty).Width, "English Settings label fits without truncation");
+                Check(ApiTranslator.HttpError(401).Contains("key") && Providers.Get("claude-code").ToString().Contains("official account"), "Errors and provider labels follow the interface language");
+                languageSettings.Language = "es"; translatedWindow.ApplyLanguage();
+                Check(translatedWindow.Controls.Find("Paste", true)[0].Text == "Pegar" && translatedWindow.Controls.Find("Translation", true)[0].Text == "Texto que no debe cambiar", "Language can switch back immediately without changing translated content");
+                translatedWindow.Quit();
+            }
             using (var dialog = new SettingsForm(new Settings()))
             {
                 dialog.Show(); Application.DoEvents();
@@ -463,5 +493,63 @@ namespace Traduce
             }
             return bitmap;
         }
+
+        private static async Task DocumentationScreenshots()
+        {
+            string folder = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Self), "..", "docs"));
+            Directory.CreateDirectory(folder);
+            foreach (string language in new[] { "es", "en" })
+            {
+                var settings = new Settings { Language = language, ConfigurationComplete = true };
+                using (var form = new MainForm(settings))
+                {
+                    form.ClientSize = new Size(520, 255);
+                    string spanish = "Los pequeños pasos marcan la diferencia.\r\n\r\nSelecciona lo que quieras entender, esté donde esté.\r\n\r\nUna idea, dos idiomas. Así de sencillo.";
+                    string english = "Small steps make a difference.\r\n\r\nSelect whatever you want to understand, wherever it is.\r\n\r\nOne idea, two languages. It's that simple.";
+                    form.Preview(language == "es" ? english : spanish, language == "es" ? spanish : english);
+                    await SaveWindowCapture(form, Path.Combine(folder, "window-" + language + ".png"));
+                    form.Quit();
+                }
+                using (var form = new SettingsForm(settings))
+                {
+                    await SaveWindowCapture(form, Path.Combine(folder, "settings-" + language + ".png"));
+                    var selection = (ComboBox)form.Controls.Find("InterfaceLanguage", true)[0];
+                    Check(selection.SelectedIndex == (language == "es" ? 0 : 1), "Documentation captures the real " + language + " interface");
+                    form.Close();
+                }
+            }
+            L.Language = "es";
+        }
+
+        private static async Task SaveWindowCapture(Form form, string path)
+        {
+            // A neutral window behind the app keeps its translucent frame free of desktop content.
+            using (var backdrop = new Form { FormBorderStyle = FormBorderStyle.None, ShowInTaskbar = false, BackColor = Color.FromArgb(234, 238, 243), Bounds = Screen.PrimaryScreen.WorkingArea, StartPosition = FormStartPosition.Manual })
+            {
+                backdrop.Show(); form.Show(); form.Activate(); FocusTestWindow(form.Handle);
+                await Task.Delay(400); form.Refresh();
+                var translation = form.Controls.Find("Translation", true).FirstOrDefault() as TextBox;
+                if (translation != null)
+                {
+                    translation.Select(0, 0);
+                    form.Controls.Find("Paste", true)[0].Focus();
+                    form.Refresh(); await Task.Delay(80);
+                }
+                WindowRect frame;
+                Rectangle area = form.Bounds;
+                if (DwmGetWindowAttribute(form.Handle, 9, out frame, 16) == 0)
+                    area = Rectangle.FromLTRB(frame.Left, frame.Top, frame.Right, frame.Bottom);
+                using (var bitmap = new Bitmap(area.Width, area.Height))
+                using (var graphics = Graphics.FromImage(bitmap))
+                {
+                    graphics.CopyFromScreen(area.Location, Point.Empty, area.Size);
+                    bitmap.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                }
+            }
+        }
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        private struct WindowRect { public int Left, Top, Right, Bottom; }
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+        private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out WindowRect value, int size);
     }
 }

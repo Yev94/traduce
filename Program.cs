@@ -34,7 +34,7 @@ namespace Traduce
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.ThreadException += delegate(object sender, ThreadExceptionEventArgs e) {
-                    MessageBox.Show("No se ha podido completar la acción. " + e.Exception.Message, "Traduce", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(L.T("No se ha podido completar la acción. ") + e.Exception.Message, "Traduce", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 };
                 using (var main = new MainForm())
                 {
@@ -113,6 +113,7 @@ namespace Traduce
         {
             captureLog = log;
             settings = overrides ?? Settings.Load();
+            L.Language = L.Normalize(settings.Language);
             NeedsSetup = overrides == null && !settings.ConfigurationComplete;
             if (settings.Shortcut < 0 || settings.Shortcut >= Shortcuts.Length) settings.Shortcut = 0;
             Text = "Traduce";
@@ -126,7 +127,7 @@ namespace Traduce
             Font = new Font("Segoe UI", 10);
             AutoScaleDimensions = new SizeF(96, 96);
             AutoScaleMode = AutoScaleMode.Dpi;
-            Icon = MakeIcon();
+            Icon = Brand.Icon();
             root.Dock = DockStyle.Fill; root.ColumnCount = 1; root.RowCount = 4; root.Padding = new Padding(6);
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
@@ -136,28 +137,28 @@ namespace Traduce
             source.Name = "Original"; target.Name = "Translation";
             ConfigureText(source, false); source.Visible = false; root.Controls.Add(source, 0, 0);
             actions.Dock = DockStyle.Fill; actions.Padding = new Padding(0, 4, 0, 0); actions.Visible = false;
-            ConfigureButton(translate, "Traducir", true); translate.Width = 96;
+            ConfigureButton(translate, L.T("Traducir"), true); translate.Width = 96;
             actions.Controls.Add(translate); root.Controls.Add(actions, 0, 1);
             ConfigureText(target, true); root.Controls.Add(target, 0, 2);
             var bottom = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(0, 5, 0, 0), WrapContents = true, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
-            ConfigureButton(copy, "Copiar", true); copy.Width = 68; copy.Enabled = false;
-            ConfigureButton(paste, "Pegar", false); paste.Width = 60; paste.Name = "Paste";
-            ConfigureButton(imageButton, "Imagen", false); imageButton.Width = 70;
-            ConfigureButton(edit, "Texto", false); edit.Width = 60; edit.Name = "EditOriginal";
-            ConfigureButton(settingsButton, "Ajustes", false); settingsButton.Width = 68;
-            ConfigureButton(cancel, "Cancelar", false); cancel.Width = 74; cancel.Visible = false;
+            ConfigureButton(copy, L.T("Copiar"), true); copy.Width = 68; copy.Enabled = false;
+            ConfigureButton(paste, L.T("Pegar"), false); paste.Width = 60; paste.Name = "Paste";
+            ConfigureButton(imageButton, L.T("Imagen"), false); imageButton.Width = 70;
+            ConfigureButton(edit, L.T("Texto"), false); edit.Width = 60; edit.Name = "EditOriginal";
+            ConfigureButton(settingsButton, L.T("Ajustes"), false); settingsButton.Width = 68; settingsButton.Name = "Settings";
+            ConfigureButton(cancel, L.T("Cancelar"), false); cancel.Width = 74; cancel.Visible = false;
             bottom.Controls.AddRange(new Control[] { copy, paste, imageButton, edit, settingsButton, cancel }); root.Controls.Add(bottom, 0, 3);
-            help.SetToolTip(paste, "Pegar y traducir texto o una imagen del portapapeles.");
-            help.SetToolTip(imageButton, "Abrir una imagen. Alt+T permite recortar una zona de la pantalla.");
+            help.SetToolTip(paste, L.T("Pegar y traducir texto o una imagen del portapapeles."));
+            help.SetToolTip(imageButton, L.T("Abrir una imagen. Alt+T permite recortar una zona de la pantalla."));
 
             var menu = new ContextMenuStrip();
-            menu.Items.Add("Abrir Traduce", null, delegate { Reveal(); });
-            menu.Items.Add("Seleccionar región", null, delegate { CaptureSelection(); });
-            menu.Items.Add("Pegar y traducir", null, async delegate { Reveal(); await PasteAndTranslate(); });
-            menu.Items.Add("Abrir imagen", null, async delegate { Reveal(); await OpenImage(); });
-            menu.Items.Add("Ajustes", null, delegate { Reveal(); EditSettings(); });
+            menu.Items.Add(L.T("Abrir Traduce"), null, delegate { Reveal(); });
+            menu.Items.Add(L.T("Seleccionar región"), null, delegate { CaptureSelection(); });
+            menu.Items.Add(L.T("Pegar y traducir"), null, async delegate { Reveal(); await PasteAndTranslate(); });
+            menu.Items.Add(L.T("Abrir imagen"), null, async delegate { Reveal(); await OpenImage(); });
+            menu.Items.Add(L.T("Ajustes"), null, delegate { Reveal(); EditSettings(); });
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("Salir", null, delegate { Quit(); });
+            menu.Items.Add(L.T("Salir"), null, delegate { Quit(); });
             tray = new NotifyIcon { Icon = Icon, Text = "Traduce · " + Shortcuts[settings.Shortcut], ContextMenuStrip = menu, Visible = true };
             tray.DoubleClick += delegate { Reveal(); };
             tray.BalloonTipClicked += delegate { Reveal(); };
@@ -165,7 +166,7 @@ namespace Traduce
             paste.Click += async delegate { await PasteAndTranslate(); };
             imageButton.Click += async delegate { await OpenImage(); };
             cancel.Click += delegate { if (cancellation != null) cancellation.Cancel(); };
-            copy.Click += delegate { try { Clipboard.SetText(target.Text); SetStatus("Traducción copiada.", false); } catch (System.Runtime.InteropServices.ExternalException) { SetStatus("El portapapeles está ocupado. Inténtalo de nuevo.", true); } };
+            copy.Click += delegate { try { Clipboard.SetText(target.Text); SetStatus(L.T("Traducción copiada."), false); } catch (System.Runtime.InteropServices.ExternalException) { SetStatus(L.T("El portapapeles está ocupado. Inténtalo de nuevo."), true); } };
             edit.Click += delegate { SetExpanded(!expanded); if (expanded) source.Focus(); };
             settingsButton.Click += delegate { EditSettings(); };
             source.TextChanged += delegate { if (cancellation == null) { target.Clear(); copy.Enabled = false; } };
@@ -175,24 +176,23 @@ namespace Traduce
                 if (e.Control && e.KeyCode == Keys.V && !source.Focused) { e.SuppressKeyPress = true; await PasteAndTranslate(); }
                 if (e.KeyCode == Keys.Escape) { e.SuppressKeyPress = true; HideToTray(); }
             };
-            Shown += delegate { if (!registered) SetStatus("El atajo está ocupado. Elige otro en Ajustes; puedes usar Pegar.", true); };
+            Shown += delegate { if (!registered) SetStatus(L.T("El atajo está ocupado. Elige otro en Ajustes; puedes usar Pegar."), true); };
+            ApplyLanguage();
         }
 
-        private static Icon MakeIcon()
+        internal void ApplyLanguage()
         {
-            using (var bitmap = new Bitmap(32, 32))
-            using (var graphics = Graphics.FromImage(bitmap))
-            using (var brush = new SolidBrush(Color.FromArgb(104, 226, 195)))
-            using (var font = new Font("Segoe UI", 19, FontStyle.Bold, GraphicsUnit.Pixel))
+            L.Language = L.Normalize(settings.Language);
+            L.Apply(this); L.Apply(tray.ContextMenuStrip);
+            edit.Text = expanded ? L.T("Ocultar") : L.T("Texto");
+            foreach (Button button in new[] { copy, paste, imageButton, edit, settingsButton, cancel, translate })
             {
-                graphics.Clear(Color.FromArgb(16, 23, 36)); graphics.FillEllipse(brush, 1, 1, 30, 30);
-                graphics.DrawString("T", font, Brushes.Black, 7, 3);
-                IntPtr handle = bitmap.GetHicon();
-                try { using (var icon = Icon.FromHandle(handle)) return (Icon)icon.Clone(); }
-                finally { DestroyIcon(handle); }
+                button.AutoSize = true; button.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+                button.Padding = new Padding(7, 0, 7, 0); button.MinimumSize = new Size(0, 28);
             }
+            help.SetToolTip(paste, L.T("Pegar y traducir texto o una imagen del portapapeles."));
+            help.SetToolTip(imageButton, L.T("Abrir una imagen. Alt+T permite recortar una zona de la pantalla."));
         }
-        [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr icon);
 
         private void SetExpanded(bool value)
         {
@@ -204,7 +204,7 @@ namespace Traduce
             root.RowStyles[0].Height = value ? 90 * scale : 0;
             root.RowStyles[1].Height = value ? 36 * scale : 0;
             source.Visible = actions.Visible = value;
-            edit.Text = value ? "Ocultar" : "Texto";
+            edit.Text = value ? L.T("Ocultar") : L.T("Texto");
             ClientSize = new Size(ClientSize.Width, ClientSize.Height + (int)((value ? 126 : -126) * scale));
             root.ResumeLayout();
             if (Visible && popupAnchor.HasValue) PositionResult();
@@ -267,7 +267,7 @@ namespace Traduce
                     trace.RegionApplication = SourceApplication.AtCenter(crop.Bounds);
                     var screen = Screen.FromRectangle(crop.Bounds);
                     trace.Monitor = screen.DeviceName; trace.WorkingArea = screen.WorkingArea;
-                    target.Text = "Leyendo…"; RevealNear(crop.Bounds); trace.Popup = Bounds;
+                    target.Text = L.T("Leyendo…"); RevealNear(crop.Bounds); trace.Popup = Bounds;
                     var image = ImageInput.FromImage(crop.Image);
                     trace.OcrReason = "pending";
                     var ocrWatch = Stopwatch.StartNew();
@@ -292,7 +292,7 @@ namespace Traduce
             cancellation = current; activeRequests++;
             SetBusy(true);
             help.SetToolTip(target, null);
-            target.ForeColor = muted; target.Text = passive ? "Capturando…" : "Preparando…";
+            target.ForeColor = muted; target.Text = passive ? L.T("Capturando…") : L.T("Preparando…");
             var elapsed = Stopwatch.StartNew();
             var translationTime = new Stopwatch();
             string outcome = "error", errorType = null;
@@ -311,7 +311,7 @@ namespace Traduce
                     WriteCaptureLog(trace, "capture", "ready", elapsed.ElapsedMilliseconds);
                 }
                 source.Text = input.Text ?? "";
-                target.Text = "Traduciendo…";
+                target.Text = L.T("Traduciendo…");
                 translationTime.Start();
                 string result = input.Image == null
                     ? await translator.Translate(input.Text, settings, current.Token)
@@ -321,14 +321,14 @@ namespace Traduce
                 if (version == requestVersion && !quitting)
                 {
                     target.ForeColor = ink; target.Text = result; copy.Enabled = true;
-                    if (!Visible) tray.ShowBalloonTip(1800, "Traduce", "Tu traducción está lista.", ToolTipIcon.Info);
+                    if (!Visible) tray.ShowBalloonTip(1800, "Traduce", L.T("Tu traducción está lista."), ToolTipIcon.Info);
                 }
             }
             catch (OperationCanceledException)
             {
                 outcome = "cancelled";
                 if (trace != null && trace.OcrReason == "pending") trace.OcrReason = "cancelled";
-                if (version == requestVersion && !quitting) { target.Text = "Traducción cancelada."; target.ForeColor = muted; }
+                if (version == requestVersion && !quitting) { target.Text = L.T("Traducción cancelada."); target.ForeColor = muted; }
             }
             catch (Exception e)
             {
@@ -352,7 +352,7 @@ namespace Traduce
         {
             if (captureLog.Append(trace, phase, outcome, elapsed, errorType) || logFailureReported) return;
             logFailureReported = true;
-            tray.ShowBalloonTip(3000, "Traduce", "No se ha podido escribir el registro local de capturas. Comprueba el espacio y los permisos de la carpeta de Traduce.", ToolTipIcon.Warning);
+            tray.ShowBalloonTip(3000, "Traduce", L.T("No se ha podido escribir el registro local de capturas. Comprueba el espacio y los permisos de la carpeta de Traduce."), ToolTipIcon.Warning);
         }
 
         internal void RevealNear(Rectangle selection)
@@ -399,14 +399,14 @@ namespace Traduce
                 {
                     using (var image = Clipboard.GetImage()) return Task.FromResult(new TranslationInput { Image = ImageInput.FromImage(image) });
                 }
-                if (!Native.IsClipboardFormatAvailable(13)) throw new ArgumentException("El portapapeles no contiene texto ni una imagen. Haz un recorte con Win+Shift+S o usa Imagen.");
+                if (!Native.IsClipboardFormatAvailable(13)) throw new ArgumentException(L.T("El portapapeles no contiene texto ni una imagen. Haz un recorte con Win+Shift+S o usa Imagen."));
                 return Task.FromResult(new TranslationInput { Text = ClipboardAccess.ReadText() });
             }, false);
         }
 
         private async Task OpenImage()
         {
-            using (var picker = new OpenFileDialog { Title = "Traducir una imagen", Filter = "Imágenes|*.png;*.jpg;*.jpeg;*.bmp", CheckFileExists = true })
+            using (var picker = new OpenFileDialog { Title = L.T("Traducir una imagen"), Filter = L.T("Imágenes|*.png;*.jpg;*.jpeg;*.bmp"), CheckFileExists = true })
             {
                 if (picker.ShowDialog(this) != DialogResult.OK) return;
                 await Submit(token => Task.FromResult(new TranslationInput { Image = ImageInput.FromFile(picker.FileName) }), false);
@@ -436,12 +436,13 @@ namespace Traduce
                 Native.UnregisterHotKey(Handle, Native.HotkeyId);
                 if (!Register(dialog.Shortcut))
                 {
-                    registered = Register(settings.Shortcut); SetStatus("Ese atajo está ocupado. Elige otra combinación.", true); return;
+                    registered = Register(settings.Shortcut); SetStatus(L.T("Ese atajo está ocupado. Elige otra combinación."), true); return;
                 }
                 registered = true;
                 settings = dialog.Configuration; NeedsSetup = false;
+                ApplyLanguage();
                 settings.Save(); tray.Text = "Traduce · " + Shortcuts[settings.Shortcut];
-                SetStatus("Ajustes guardados.", false);
+                SetStatus(L.T("Ajustes guardados."), false);
             }
         }
         internal void Quit()
@@ -457,7 +458,7 @@ namespace Traduce
             tray.Visible = false; tray.Dispose(); help.Dispose(); base.OnFormClosing(e);
         }
 
-        internal void Preview(string original, string translation) { source.Text = original; target.Text = translation; copy.Enabled = true; SetStatus("Traducción lista.", false); }
+        internal void Preview(string original, string translation) { source.Text = original; target.Text = translation; copy.Enabled = true; SetStatus(L.T("Traducción lista."), false); }
     }
 
 }

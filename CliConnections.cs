@@ -47,34 +47,34 @@ namespace Traduce
                 var result = await Runner.Run(path, new[] { "--help" }, null, Path.GetTempPath(), 12000, token);
                 if (result.ExitCode == 0 && result.Output.Contains("--safe-mode") && result.Output.Contains("--no-session-persistence")) return path;
             }
-            throw new InvalidOperationException("No se encontró Claude Code nativo actualizado. Pulsa Instalar cliente o elige su claude.exe en Opciones avanzadas.");
+            throw new InvalidOperationException(L.T("No se encontró Claude Code nativo actualizado. Pulsa Instalar cliente o elige su claude.exe en Opciones avanzadas."));
         }
         public static async Task<string> Status(Settings settings, CancellationToken token)
         {
             string exe = await Resolve(settings, token);
             var args = settings.Provider == "codex" ? new[] { "login", "status" } : new[] { "auth", "status" };
             var result = await Runner.Run(exe, args, null, Path.GetTempPath(), 15000, token);
-            if (result.ExitCode != 0) return "Cliente instalado. Falta iniciar sesión.";
-            if (settings.Provider == "codex") return (result.Output + result.Error).IndexOf("ChatGPT", StringComparison.OrdinalIgnoreCase) >= 0 ? "Conectado con ChatGPT." : "Conectado con credenciales API de Codex (facturación API).";
+            if (result.ExitCode != 0) return L.T("Cliente instalado. Falta iniciar sesión.");
+            if (settings.Provider == "codex") return (result.Output + result.Error).IndexOf("ChatGPT", StringComparison.OrdinalIgnoreCase) >= 0 ? L.T("Conectado con ChatGPT.") : L.T("Conectado con credenciales API de Codex (facturación API).");
             var status = JsonData.Serializer().DeserializeObject(result.Output);
             string method = JsonData.Text(status, "authMethod");
-            return method.IndexOf("api", StringComparison.OrdinalIgnoreCase) >= 0 ? "Claude Code conectado por API (facturación API)." : "Claude Code conectado con tu cuenta oficial.";
+            return method.IndexOf("api", StringComparison.OrdinalIgnoreCase) >= 0 ? L.T("Claude Code conectado por API (facturación API).") : L.T("Claude Code conectado con tu cuenta oficial.");
         }
         public static async Task Login(Settings settings, CancellationToken token)
         {
             string exe = await Resolve(settings, token);
             var args = settings.Provider == "codex" ? new[] { "login" } : new[] { "auth", "login" };
             var result = await Runner.Run(exe, args, null, Path.GetTempPath(), 300000, token);
-            if (result.ExitCode != 0) throw new InvalidOperationException("El acceso oficial no se completó. Abre el cliente oficial para iniciar sesión y pulsa Comprobar después.");
+            if (result.ExitCode != 0) throw new InvalidOperationException(L.T("El acceso oficial no se completó. Abre el cliente oficial para iniciar sesión y pulsa Comprobar después."));
         }
         public static async Task Install(Settings settings, CancellationToken token)
         {
             string winget = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "WindowsApps", "winget.exe");
-            if (!File.Exists(winget)) throw new InvalidOperationException("Instala App Installer desde Microsoft Store o usa el enlace de ayuda para instalar el cliente oficial.");
+            if (!File.Exists(winget)) throw new InvalidOperationException(L.T("Instala App Installer desde Microsoft Store o usa el enlace de ayuda para instalar el cliente oficial."));
             string package = settings.Provider == "codex" ? "OpenAI.Codex" : "Anthropic.ClaudeCode";
             var result = await Runner.Run(winget, new[] { "install", "--id", package, "--exact", "--source", "winget", "--scope", "user", "--accept-source-agreements", "--accept-package-agreements", "--disable-interactivity", "--silent" }, null, Path.GetTempPath(), 600000, token);
             // WinGet may return a nonzero code if an up-to-date package exists.
-            if (result.ExitCode != 0 && !Candidates(settings.Provider).Any()) throw new InvalidOperationException("WinGet no pudo instalar el cliente. Usa el enlace de ayuda para instalarlo y después pulsa Comprobar.");
+            if (result.ExitCode != 0 && !Candidates(settings.Provider).Any()) throw new InvalidOperationException(L.T("WinGet no pudo instalar el cliente. Usa el enlace de ayuda para instalarlo y después pulsa Comprobar."));
             await Resolve(settings, token);
         }
         internal static string[] ClaudeArguments(string model)
@@ -94,11 +94,11 @@ namespace Traduce
                 if (string.IsNullOrWhiteSpace(line)) continue;
                 var item = JsonData.Serializer().DeserializeObject(line);
                 if (JsonData.Text(item, "type") != "result") continue;
-                if (object.Equals(JsonData.Get(item, "is_error"), true)) throw new InvalidOperationException("Claude Code no completó la traducción. Comprueba tu cuenta, el modelo y sus límites.");
+                if (object.Equals(JsonData.Get(item, "is_error"), true)) throw new InvalidOperationException(L.T("Claude Code no completó la traducción. Comprueba tu cuenta, el modelo y sus límites."));
                 string text = JsonData.Text(item, "result");
                 if (!string.IsNullOrWhiteSpace(text)) return text.Trim();
             }
-            throw new InvalidOperationException("Claude Code no devolvió una traducción completa.");
+            throw new InvalidOperationException(L.T("Claude Code no devolvió una traducción completa."));
         }
         public static async Task<string> TranslateClaude(string text, ImageInput image, Settings settings, CancellationToken token)
         {
@@ -108,9 +108,9 @@ namespace Traduce
             try
             {
                 var result = await Runner.Run(exe, ClaudeArguments(Providers.Model(settings)), ClaudeInput(text, image), folder, 180000, token);
-                if (result.ExitCode != 0) throw new InvalidOperationException("Claude Code no pudo traducir. Comprueba tu sesión, el modelo y sus límites desde Conexión.");
+                if (result.ExitCode != 0) throw new InvalidOperationException(L.T("Claude Code no pudo traducir. Comprueba tu sesión, el modelo y sus límites desde Conexión."));
                 try { return ClaudeResult(result.Output); }
-                catch (ArgumentException) { throw new InvalidOperationException("Actualiza Claude Code: devolvió una respuesta no compatible."); }
+                catch (ArgumentException) { throw new InvalidOperationException(L.T("Actualiza Claude Code: devolvió una respuesta no compatible.")); }
             }
             finally { try { Directory.Delete(folder, true); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
         }

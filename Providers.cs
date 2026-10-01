@@ -16,7 +16,7 @@ namespace Traduce
     {
         public string Id, Name, Protocol, Endpoint, DefaultModel, HelpUrl, Hint;
         public bool IsCli { get { return Protocol == "cli"; } }
-        public override string ToString() { return Name; }
+        public override string ToString() { return L.T(Name); }
     }
 
     internal static class Providers
@@ -29,12 +29,12 @@ namespace Traduce
             new ProviderDefinition { Id="gemini", Name="Google Gemini · API", Protocol="chat", Endpoint="https://generativelanguage.googleapis.com/v1beta/openai", DefaultModel="gemini-3.8-flash", HelpUrl="https://aistudio.google.com/api-keys", Hint="Pega tu clave de Google AI Studio. Las cuotas y la facturación son las de Gemini API." },
             new ProviderDefinition { Id="openrouter", Name="OpenRouter · API", Protocol="chat", Endpoint="https://openrouter.ai/api/v1", DefaultModel="", HelpUrl="https://openrouter.ai/settings/keys", Hint="Carga y elige un modelo de tu cuenta de OpenRouter. Para imágenes necesita admitir visión." },
             new ProviderDefinition { Id="ollama", Name="Ollama · local", Protocol="chat", Endpoint="http://localhost:11434/v1", DefaultModel="", HelpUrl="https://ollama.com/download/windows", Hint="Ejecuta Ollama en este ordenador y elige un modelo que tengas descargado. Para imágenes necesita visión; el texto OCR funciona con modelos de texto." },
-            new ProviderDefinition { Id="custom", Name="Otra API compatible con OpenAI", Protocol="chat", DefaultModel="", HelpUrl="https://github.com/Yev94/traduce#proveedores", Hint="Introduce la URL base (por ejemplo https://servidor/v1), el modelo y su clave. HTTP sin cifrar solo se admite en localhost." }
+            new ProviderDefinition { Id="custom", Name="Otra API compatible con OpenAI", Protocol="chat", DefaultModel="", HelpUrl="https://github.com/Yev94/traduce#providers", Hint="Introduce la URL base (por ejemplo https://servidor/v1), el modelo y su clave. HTTP sin cifrar solo se admite en localhost." }
         };
         public static ProviderDefinition Get(string id)
         {
             var provider = All.FirstOrDefault(p => p.Id == (string.IsNullOrEmpty(id) ? "codex" : id));
-            if (provider == null) throw new ArgumentException("Elige un proveedor válido en Conexión.");
+            if (provider == null) throw new ArgumentException(L.T("Elige un proveedor válido en Conexión."));
             return provider;
         }
         public static string Model(Settings settings)
@@ -50,17 +50,17 @@ namespace Traduce
             if (!Uri.TryCreate((url ?? "").Trim().TrimEnd('/') + "/", UriKind.Absolute, out endpoint) ||
                 !(endpoint.Scheme == "https" || (endpoint.Scheme == "http" && endpoint.IsLoopback)) ||
                 endpoint.UserInfo.Length > 0 || endpoint.Query.Length > 0 || endpoint.Fragment.Length > 0)
-                throw new ArgumentException("Usa una URL base HTTPS sin clave, usuario ni parámetros. HTTP solo está permitido para localhost.");
+                throw new ArgumentException(L.T("Usa una URL base HTTPS sin clave, usuario ni parámetros. HTTP solo está permitido para localhost."));
             return endpoint;
         }
         public static void Validate(Settings settings)
         {
             var provider = Get(settings.Provider);
-            if (string.IsNullOrWhiteSpace(Model(settings))) throw new ArgumentException("Selecciona o escribe el nombre del modelo.");
+            if (string.IsNullOrWhiteSpace(Model(settings))) throw new ArgumentException(L.T("Selecciona o escribe el nombre del modelo."));
             if (provider.IsCli) return;
             var endpoint = Endpoint(settings);
             if (provider.Id != "ollama" && !(provider.Id == "custom" && endpoint.IsLoopback) && settings.Profile(provider.Id).ReadKey().Length == 0)
-                throw new ArgumentException("Pega tu clave API en Conexión.");
+                throw new ArgumentException(L.T("Pega tu clave API en Conexión."));
         }
     }
 
@@ -103,18 +103,18 @@ namespace Traduce
             IEnumerable<object> content;
             if (protocol == "responses")
             {
-                if (JsonData.Text(result, "status") == "incomplete" || JsonData.Text(result, "status") == "failed") throw new InvalidOperationException("La respuesta está incompleta. Prueba un recorte más pequeño u otro modelo.");
+                if (JsonData.Text(result, "status") == "incomplete" || JsonData.Text(result, "status") == "failed") throw new InvalidOperationException(L.T("La respuesta está incompleta. Prueba un recorte más pequeño u otro modelo."));
                 content = JsonData.Items(JsonData.Get(result, "output")).Where(item => JsonData.Text(item, "type") == "message").SelectMany(item => JsonData.Items(JsonData.Get(item, "content")));
             }
             else if (protocol == "anthropic")
             {
-                if (JsonData.Text(result, "stop_reason") == "max_tokens") throw new InvalidOperationException("La respuesta ha alcanzado el límite del modelo. Prueba un recorte más pequeño.");
+                if (JsonData.Text(result, "stop_reason") == "max_tokens") throw new InvalidOperationException(L.T("La respuesta ha alcanzado el límite del modelo. Prueba un recorte más pequeño."));
                 content = JsonData.Items(JsonData.Get(result, "content"));
             }
             else
             {
                 var choice = JsonData.Items(JsonData.Get(result, "choices")).FirstOrDefault();
-                if (JsonData.Text(choice, "finish_reason") == "length") throw new InvalidOperationException("La respuesta está incompleta. Prueba un recorte más pequeño.");
+                if (JsonData.Text(choice, "finish_reason") == "length") throw new InvalidOperationException(L.T("La respuesta está incompleta. Prueba un recorte más pequeño."));
                 var raw = JsonData.Get(JsonData.Get(choice, "message"), "content");
                 if (raw is string) return RequireText((string)raw);
                 content = JsonData.Items(raw);
@@ -123,16 +123,16 @@ namespace Traduce
         }
         private static string RequireText(string text)
         {
-            if (string.IsNullOrWhiteSpace(text)) throw new InvalidOperationException("El proveedor no ha devuelto texto. Comprueba que el modelo admita esta entrada.");
+            if (string.IsNullOrWhiteSpace(text)) throw new InvalidOperationException(L.T("El proveedor no ha devuelto texto. Comprueba que el modelo admita esta entrada."));
             return text.Trim();
         }
         internal static string HttpError(int code)
         {
-            if (code == 401 || code == 403) return "El proveedor rechazó la clave o sus permisos. Revisa Conexión.";
-            if (code == 429) return "El proveedor ha alcanzado su cuota o límite de uso. Revisa tu cuenta o espera e inténtalo de nuevo.";
-            if (code == 400 || code == 404 || code == 422) return "El proveedor no admite esta petición. Comprueba el modelo, la URL y el soporte de imágenes.";
-            if (code >= 300 && code < 400) return "El proveedor devolvió una redirección. Corrige la URL base; no se reenviarán tus credenciales.";
-            return "El proveedor no pudo completar la petición (HTTP " + code + "). Inténtalo más tarde.";
+            if (code == 401 || code == 403) return L.T("El proveedor rechazó la clave o sus permisos. Revisa Conexión.");
+            if (code == 429) return L.T("El proveedor ha alcanzado su cuota o límite de uso. Revisa tu cuenta o espera e inténtalo de nuevo.");
+            if (code == 400 || code == 404 || code == 422) return L.T("El proveedor no admite esta petición. Comprueba el modelo, la URL y el soporte de imágenes.");
+            if (code >= 300 && code < 400) return L.T("El proveedor devolvió una redirección. Corrige la URL base; no se reenviarán tus credenciales.");
+            return L.T("El proveedor no pudo completar la petición (HTTP ") + code + L.T("). Inténtalo más tarde.");
         }
         private async Task<string> Send(Settings settings, string path, object body, CancellationToken token)
         {
@@ -153,8 +153,8 @@ namespace Traduce
                         return await response.Content.ReadAsStringAsync();
                     }
                 }
-                catch (TaskCanceledException) { token.ThrowIfCancellationRequested(); throw new TimeoutException("El proveedor ha tardado demasiado. Inténtalo de nuevo."); }
-                catch (HttpRequestException) { throw new InvalidOperationException("No se pudo conectar con el proveedor. Revisa la URL, la conexión y el certificado del servidor."); }
+                catch (TaskCanceledException) { token.ThrowIfCancellationRequested(); throw new TimeoutException(L.T("El proveedor ha tardado demasiado. Inténtalo de nuevo.")); }
+                catch (HttpRequestException) { throw new InvalidOperationException(L.T("No se pudo conectar con el proveedor. Revisa la URL, la conexión y el certificado del servidor.")); }
             }
         }
         public async Task<string> Translate(string text, ImageInput image, Settings settings, CancellationToken token)
@@ -163,7 +163,7 @@ namespace Traduce
             string path = provider.Protocol == "responses" ? "responses" : provider.Protocol == "anthropic" ? "messages" : "chat/completions";
             var json = await Send(settings, path, Payload(provider.Protocol, Providers.Model(settings), text, image), token);
             try { return Parse(provider.Protocol, json); }
-            catch (ArgumentException) { throw new InvalidOperationException("El proveedor devolvió una respuesta con un formato no compatible."); }
+            catch (ArgumentException) { throw new InvalidOperationException(L.T("El proveedor devolvió una respuesta con un formato no compatible.")); }
         }
         public async Task<string[]> Models(Settings settings, CancellationToken token)
         {
@@ -173,7 +173,7 @@ namespace Traduce
                 var response = JsonData.Serializer().DeserializeObject(json);
                 return JsonData.Items(JsonData.Get(response, "data")).Select(item => JsonData.Text(item, "id")).Where(id => id.Length > 0).Distinct().OrderBy(id => id).ToArray();
             }
-            catch (ArgumentException) { throw new InvalidOperationException("El proveedor devolvió una lista de modelos con un formato no compatible."); }
+            catch (ArgumentException) { throw new InvalidOperationException(L.T("El proveedor devolvió una lista de modelos con un formato no compatible.")); }
         }
     }
 }

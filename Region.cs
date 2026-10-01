@@ -24,7 +24,7 @@ namespace Traduce
         internal RegionPicker(Bitmap snapshot, Rectangle bounds)
         {
             desktop = snapshot;
-            Text = "Traduce: seleccionar región";
+            Text = L.T("Traduce: seleccionar región");
             FormBorderStyle = FormBorderStyle.None; StartPosition = FormStartPosition.Manual;
             AutoScaleMode = AutoScaleMode.None; Bounds = bounds;
             ShowInTaskbar = false; TopMost = true; DoubleBuffered = true;

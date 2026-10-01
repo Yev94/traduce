@@ -1,4 +1,4 @@
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 
 [Setup]
 AppId={{C6EA322A-171B-48A9-B728-D9275F110E2F}
@@ -21,6 +21,8 @@ OutputBaseFilename=Traduce-Setup
 Compression=lzma2
 SolidCompression=yes
 UninstallDisplayIcon={app}\Traduce.exe
+SetupIconFile=assets\traduce.ico
+ShowLanguageDialog=yes
 CloseApplications=yes
 RestartApplications=no
 SetupLogging=yes
@@ -30,14 +32,32 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "startup"; Description: "Iniciar Traduce al entrar en Windows / Start with Windows"; Flags: checkedonce
-Name: "desktopicon"; Description: "Crear acceso directo en el escritorio / Desktop shortcut"; Flags: unchecked
+Name: "startup"; Description: "{cm:StartupTask}"; Flags: checkedonce
+Name: "desktopicon"; Description: "{cm:DesktopTask}"; Flags: unchecked
+
+[CustomMessages]
+spanish.StartupTask=Iniciar Traduce al entrar en Windows
+english.StartupTask=Start Traduce with Windows
+spanish.DesktopTask=Crear acceso directo en el escritorio
+english.DesktopTask=Create a desktop shortcut
+spanish.LaunchApp=Abrir Traduce
+english.LaunchApp=Launch Traduce
+spanish.CloseApp=Cierra Traduce desde el icono junto al reloj y vuelve a intentarlo.
+english.CloseApp=Close Traduce from the system tray and try again.
+spanish.NeedFramework=Traduce necesita .NET Framework 4.8. Instálalo desde Windows Update o https://dotnet.microsoft.com/download/dotnet-framework/net48
+english.NeedFramework=Traduce requires .NET Framework 4.8. Install it from Windows Update or https://dotnet.microsoft.com/download/dotnet-framework/net48
 
 [Files]
 Source: "dist\Traduce.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\Traduce.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "README.es.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
+Source: "docs\window-es.png"; DestDir: "{app}\docs"; Flags: ignoreversion
+Source: "docs\window-en.png"; DestDir: "{app}\docs"; Flags: ignoreversion
+Source: "docs\settings-es.png"; DestDir: "{app}\docs"; Flags: ignoreversion
+Source: "docs\settings-en.png"; DestDir: "{app}\docs"; Flags: ignoreversion
 
 [Icons]
 Name: "{userprograms}\Traduce"; Filename: "{app}\Traduce.exe"; WorkingDir: "{app}"
@@ -49,7 +69,7 @@ Name: "{userstartup}\Traduce"; Filename: "{app}\Traduce.exe"; Parameters: "--bac
 Type: files; Name: "{userstartup}\Traduce.lnk"; Check: not WizardIsTaskSelected('startup')
 
 [Run]
-Filename: "{app}\Traduce.exe"; Parameters: "--background"; Description: "Abrir Traduce / Launch Traduce"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Traduce.exe"; Parameters: "--background"; Description: "{cm:LaunchApp}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 function CloseTraduce(): Boolean;
@@ -73,14 +93,14 @@ function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
   if not CloseTraduce() then
-    Result := 'Cierra Traduce desde el icono junto al reloj y vuelve a intentarlo. / Close Traduce from the system tray and try again.';
+    Result := CustomMessage('CloseApp');
 end;
 
 function InitializeUninstall(): Boolean;
 begin
   Result := CloseTraduce();
   if not Result then
-    MsgBox('Cierra Traduce desde el icono junto al reloj. / Close Traduce from the system tray.', mbInformation, MB_OK);
+    MsgBox(CustomMessage('CloseApp'), mbInformation, MB_OK);
 end;
 
 function InitializeSetup(): Boolean;
@@ -89,5 +109,5 @@ var
 begin
   Result := RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full', 'Release', NetRelease) and (NetRelease >= 528040);
   if not Result then
-    MsgBox('Traduce necesita .NET Framework 4.8. Instálalo desde Windows Update o https://dotnet.microsoft.com/download/dotnet-framework/net48', mbInformation, MB_OK);
+    MsgBox(CustomMessage('NeedFramework'), mbInformation, MB_OK);
 end;
