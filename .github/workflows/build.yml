@@ -1,0 +1,32 @@
+name: Windows build
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test provider contracts without credentials
+        shell: powershell
+        run: .\build.ps1 -ContractTest
+      - name: Install packaging tool if needed
+        shell: powershell
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed.' }
+          }
+      - name: Create installer and portable ZIP
+        shell: powershell
+        run: .\package.ps1 -SkipBuild
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Traduce-Windows-x64
+          path: release/*
+          if-no-files-found: error

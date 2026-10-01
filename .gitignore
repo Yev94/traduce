@@ -1,0 +1,9 @@
+/build/
+/dist/
+/release/
+*.user
+*.log
+.env*
+settings.json
+auth.json
+logs/
